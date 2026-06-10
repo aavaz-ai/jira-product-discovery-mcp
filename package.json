@@ -1,13 +1,16 @@
 {
-  "name": "@aashari/mcp-server-atlassian-jira",
-  "version": "3.3.0",
-  "description": "Node.js/TypeScript MCP server for Atlassian Jira. Equips AI systems (LLMs) with tools to list/get projects, search/get issues (using JQL/ID), and view dev info (commits, PRs). Connects AI capabilities directly into Jira project management and issue tracking workflows.",
+  "name": "@enterpret/jira-mcp",
+  "version": "0.1.0",
+  "description": "Enterpret fork of @aashari/mcp-server-atlassian-jira adding an ATLASSIAN_OAUTH_BEARER mode (3LO bearer + cloudId discovery) so a Nango-supplied access token plugs straight into Jira Cloud REST. Used by the Orbit/wisdom-v2 jira_mcp bring_token connector.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "commonjs",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/aashari/mcp-server-atlassian-jira.git"
+    "url": "https://github.com/aavaz-ai/jira-mcp-server.git"
   },
   "bin": {
     "mcp-atlassian-jira": "./dist/index.js"

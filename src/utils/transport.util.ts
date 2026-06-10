@@ -19,9 +19,45 @@ transportLogger.debug('Transport utility initialized');
  * Interface for Atlassian API credentials
  */
 export interface AtlassianCredentials {
-	siteName: string;
-	userEmail: string;
-	apiToken: string;
+	// API-token (Basic auth) mode:
+	siteName?: string;
+	userEmail?: string;
+	apiToken?: string;
+	// OAuth 3LO mode (Nango-supplied bearer). When set, requests use
+	// `Authorization: Bearer <token>` against the api.atlassian.com gateway.
+	oauthBearer?: string;
+}
+
+// 3LO bearers address Jira via https://api.atlassian.com/ex/jira/{cloudId}.
+// Resolve the cloudId once via the accessible-resources endpoint and cache it
+// in-process. ATLASSIAN_CLOUD_ID overrides discovery for multi-site tokens.
+let cachedCloudId: string | null = null;
+
+async function resolveCloudId(bearer: string): Promise<string> {
+	const override = config.get('ATLASSIAN_CLOUD_ID');
+	if (override) {
+		return override;
+	}
+	if (cachedCloudId) {
+		return cachedCloudId;
+	}
+	const response = await fetch(
+		'https://api.atlassian.com/oauth/token/accessible-resources',
+		{ headers: { Authorization: `Bearer ${bearer}`, Accept: 'application/json' } },
+	);
+	if (!response.ok) {
+		throw createAuthInvalidError(
+			`Failed to resolve Atlassian cloudId (accessible-resources ${response.status}). The OAuth token may be invalid or missing required scopes.`,
+		);
+	}
+	const resources = (await response.json()) as Array<{ id: string }>;
+	if (!Array.isArray(resources) || resources.length === 0 || !resources[0]?.id) {
+		throw createAuthInvalidError(
+			'OAuth token has no accessible Atlassian sites. Re-authorize the Jira connection.',
+		);
+	}
+	cachedCloudId = resources[0].id;
+	return cachedCloudId;
 }
 
 /**
@@ -51,18 +87,25 @@ export function getAtlassianCredentials(): AtlassianCredentials | null {
 		'getAtlassianCredentials',
 	);
 
+	// OAuth 3LO bearer takes precedence (the Nango bring_token path).
+	const oauthBearer = config.get('ATLASSIAN_OAUTH_BEARER');
+	if (oauthBearer) {
+		methodLogger.debug('Using Atlassian OAuth bearer credentials');
+		return { oauthBearer };
+	}
+
 	const siteName = config.get('ATLASSIAN_SITE_NAME');
 	const userEmail = config.get('ATLASSIAN_USER_EMAIL');
 	const apiToken = config.get('ATLASSIAN_API_TOKEN');
 
 	if (!siteName || !userEmail || !apiToken) {
 		methodLogger.warn(
-			'Missing Atlassian credentials. Please set ATLASSIAN_SITE_NAME, ATLASSIAN_USER_EMAIL, and ATLASSIAN_API_TOKEN environment variables.',
+			'Missing Atlassian credentials. Set ATLASSIAN_OAUTH_BEARER, or ATLASSIAN_SITE_NAME + ATLASSIAN_USER_EMAIL + ATLASSIAN_API_TOKEN.',
 		);
 		return null;
 	}
 
-	methodLogger.debug('Using Atlassian credentials');
+	methodLogger.debug('Using Atlassian API-token credentials');
 	return {
 		siteName,
 		userEmail,
@@ -87,18 +130,25 @@ export async function fetchAtlassian<T>(
 		'fetchAtlassian',
 	);
 
-	const { siteName, userEmail, apiToken } = credentials;
-
 	// Ensure path starts with a slash
 	const normalizedPath = path.startsWith('/') ? path : `/${path}`;
 
-	// Construct the full URL
-	const baseUrl = `https://${siteName}.atlassian.net`;
+	// Construct the full URL + auth header based on the credential mode.
+	let baseUrl: string;
+	let authHeader: string;
+	if (credentials.oauthBearer) {
+		const cloudId = await resolveCloudId(credentials.oauthBearer);
+		baseUrl = `https://api.atlassian.com/ex/jira/${cloudId}`;
+		authHeader = `Bearer ${credentials.oauthBearer}`;
+	} else {
+		baseUrl = `https://${credentials.siteName}.atlassian.net`;
+		authHeader = `Basic ${Buffer.from(`${credentials.userEmail}:${credentials.apiToken}`).toString('base64')}`;
+	}
 	const url = `${baseUrl}${normalizedPath}`;
 
 	// Set up authentication and headers
 	const headers = {
-		Authorization: `Basic ${Buffer.from(`${userEmail}:${apiToken}`).toString('base64')}`,
+		Authorization: authHeader,
 		'Content-Type': 'application/json',
 		Accept: 'application/json',
 		...options.headers,
