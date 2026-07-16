@@ -12,6 +12,7 @@ import cors from 'cors';
 
 // Import tools
 import atlassianApiTools from './tools/atlassian.api.tool.js';
+import jiraAttachmentTools from './tools/jira.attachments.tool.js';
 import jpdInsightsTools from './tools/jpd.insights.tool.js';
 
 // Create a contextualized logger for this file
@@ -64,6 +65,7 @@ export async function startServer(
 	// Register tools
 	serverLogger.info('Registering MCP tools...');
 	atlassianApiTools.registerTools(serverInstance);
+	jiraAttachmentTools.registerTools(serverInstance);
 	jpdInsightsTools.registerTools(serverInstance);
 	serverLogger.info('All tools registered successfully');
 

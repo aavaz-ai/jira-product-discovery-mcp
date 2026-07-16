@@ -3,6 +3,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { VERSION } from '../utils/constants.util.js';
 import atlassianApiTools from './atlassian.api.tool.js';
+import jiraAttachmentTools from './jira.attachments.tool.js';
 import jpdInsightsTools from './jpd.insights.tool.js';
 import {
 	CreateJpdInsightArgs,
@@ -15,6 +16,7 @@ async function connect(registerGeneric = true) {
 	const [clientTransport, serverTransport] =
 		InMemoryTransport.createLinkedPair();
 	if (registerGeneric) atlassianApiTools.registerTools(server);
+	if (registerGeneric) jiraAttachmentTools.registerTools(server);
 	jpdInsightsTools.registerTools(server);
 	await Promise.all([
 		server.connect(serverTransport),
@@ -27,7 +29,7 @@ async function connect(registerGeneric = true) {
 }
 
 describe('JPD Insight MCP tools', () => {
-	it('publishes exactly seven typed tools with separate permissions', async () => {
+	it('publishes exactly eight typed tools with separate permissions', async () => {
 		const { client, close } = await connect();
 		try {
 			const { tools } = await client.listTools();
@@ -37,6 +39,7 @@ describe('JPD Insight MCP tools', () => {
 				'jira_put',
 				'jira_patch',
 				'jira_delete',
+				'jira_add_attachment',
 				'jira_list_jpd_insights',
 				'jira_create_jpd_insight',
 			]);

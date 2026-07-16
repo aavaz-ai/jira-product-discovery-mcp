@@ -179,7 +179,7 @@ const JIRA_POST_DESCRIPTION = `Create Jira resources. Returns TOON format by def
    body: \`{"transition": {"id": "31"}}\`
 
 5. **Add attachment:** \`/rest/api/3/issue/{issueIdOrKey}/attachments\`
-   Note: Requires multipart form data (complex - use Jira UI for attachments)
+   Use the typed \`jira_add_attachment\` tool, which constructs the required multipart request.
 
 API reference: https://developer.atlassian.com/cloud/jira/platform/rest/v3/`;
 

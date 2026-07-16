@@ -106,7 +106,7 @@ Create `~/.mcp/configs.json` for system-wide configuration:
 
 ## Available Tools
 
-This MCP server provides the five existing generic Jira tools plus two typed Jira Product Discovery Insight tools:
+This MCP server provides five generic Jira tools, two Jira Product Discovery Insight tools, and a typed attachment upload tool:
 
 | Tool | Description |
 |------|-------------|
@@ -115,12 +115,15 @@ This MCP server provides the five existing generic Jira tools plus two typed Jir
 | `jira_put` | PUT to any endpoint (replace resources) |
 | `jira_patch` | PATCH any endpoint (partial updates) |
 | `jira_delete` | DELETE any endpoint (remove resources) |
+| `jira_add_attachment` | Upload UTF-8 or base64 file content to an issue or JPD idea |
 | `jira_list_jpd_insights` | List native JPD Insights for an idea key |
 | `jira_create_jpd_insight` | Create a native JPD Insight with linked evidence in its description |
 
 ### Jira Product Discovery Insights
 
 JPD tools reuse `ATLASSIAN_OAUTH_BEARER`. Creation stores the summary, quote, and linked source in the native Insight description without requiring a separate OAuth client ID.
+
+`jira_add_attachment` accepts plain UTF-8 content or base64-encoded binary content and constructs Jira's required multipart upload. The MCP upload limit is 10 MiB per file, and repeated calls create separate attachments.
 
 ### Common API Paths
 

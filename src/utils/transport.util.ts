@@ -76,6 +76,10 @@ export interface RequestOptions {
 	method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 	headers?: Record<string, string>;
 	body?: unknown;
+	// Multipart uploads must pass FormData to fetch without JSON serialization.
+	bodyFormat?: 'json' | 'raw';
+	// Keep attachment data and returned content URLs out of logs and raw files.
+	sensitive?: boolean;
 }
 
 /**
@@ -156,10 +160,13 @@ export async function fetchAtlassian<T>(
 	const url = `${baseUrl}${normalizedPath}`;
 
 	// Set up authentication and headers
-	const headers = {
+	const headers: Record<string, string> = {
 		Authorization: authHeader,
-		'Content-Type': 'application/json',
 		Accept: 'application/json',
+		// FormData supplies its own multipart boundary; forcing JSON would break the upload.
+		...(options.bodyFormat === 'raw'
+			? {}
+			: { 'Content-Type': 'application/json' }),
 		...options.headers,
 	};
 
@@ -167,7 +174,12 @@ export async function fetchAtlassian<T>(
 	const requestOptions: RequestInit = {
 		method: options.method || 'GET',
 		headers,
-		body: options.body ? JSON.stringify(options.body) : undefined,
+		body:
+			options.body === undefined
+				? undefined
+				: options.bodyFormat === 'raw'
+					? (options.body as RequestInit['body'])
+					: JSON.stringify(options.body),
 	};
 
 	methodLogger.debug(`Calling Atlassian API: ${url}`);
@@ -356,17 +368,22 @@ export async function fetchAtlassian<T>(
 		// For JSON responses, parse the text we already read
 		try {
 			const responseJson = JSON.parse(responseText);
-			methodLogger.debug(`Response body:`, responseJson);
+			// Attachment calls contain file data and content URLs, so skip debug and raw-file output.
+			if (!options.sensitive) {
+				methodLogger.debug(`Response body:`, responseJson);
+			}
 
 			// Save raw response to file and capture the path
-			const rawResponsePath = saveRawResponse(
-				url,
-				requestOptions.method || 'GET',
-				options.body,
-				responseJson,
-				response.status,
-				parseFloat(requestDuration),
-			);
+			const rawResponsePath = options.sensitive
+				? null
+				: saveRawResponse(
+						url,
+						requestOptions.method || 'GET',
+						options.body,
+						responseJson,
+						response.status,
+						parseFloat(requestDuration),
+					);
 
 			return { data: responseJson as T, rawResponsePath };
 		} catch {
