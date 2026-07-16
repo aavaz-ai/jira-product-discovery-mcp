@@ -106,7 +106,7 @@ Create `~/.mcp/configs.json` for system-wide configuration:
 
 ## Available Tools
 
-This MCP server provides 5 generic tools that can access any Jira API endpoint:
+This MCP server provides the five existing generic Jira tools plus two typed Jira Product Discovery Insight tools:
 
 | Tool | Description |
 |------|-------------|
@@ -115,6 +115,12 @@ This MCP server provides 5 generic tools that can access any Jira API endpoint:
 | `jira_put` | PUT to any endpoint (replace resources) |
 | `jira_patch` | PATCH any endpoint (partial updates) |
 | `jira_delete` | DELETE any endpoint (remove resources) |
+| `jira_list_jpd_insights` | List native JPD Insights for an idea key |
+| `jira_create_jpd_insight` | Create a native JPD Insight with linked evidence in its description |
+
+### Jira Product Discovery Insights
+
+JPD tools reuse `ATLASSIAN_OAUTH_BEARER`. Creation stores the summary, quote, and linked source in the native Insight description without requiring a separate OAuth client ID.
 
 ### Common API Paths
 

@@ -12,6 +12,7 @@ import cors from 'cors';
 
 // Import tools
 import atlassianApiTools from './tools/atlassian.api.tool.js';
+import jpdInsightsTools from './tools/jpd.insights.tool.js';
 
 // Create a contextualized logger for this file
 const indexLogger = Logger.forContext('index.ts');
@@ -63,6 +64,7 @@ export async function startServer(
 	// Register tools
 	serverLogger.info('Registering MCP tools...');
 	atlassianApiTools.registerTools(serverInstance);
+	jpdInsightsTools.registerTools(serverInstance);
 	serverLogger.info('All tools registered successfully');
 
 	if (mode === 'stdio') {
