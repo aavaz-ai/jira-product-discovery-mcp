@@ -50,10 +50,7 @@ describe('Transport Utility', () => {
 		});
 
 		it('should return null when environment variables are missing', () => {
-			// Save original values
-			const origSiteName = config.get('ATLASSIAN_SITE_NAME');
-			const origUserEmail = config.get('ATLASSIAN_USER_EMAIL');
-			const origApiToken = config.get('ATLASSIAN_API_TOKEN');
+			const originalConfigGet = config.get;
 
 			// Create test environment without credentials
 			const testConfig = {
@@ -74,13 +71,8 @@ describe('Transport Utility', () => {
 				// Verify the result is null
 				expect(credentials).toBeNull();
 			} finally {
-				// Restore config behavior for subsequent tests
-				config.get = (key: string) => {
-					if (key === 'ATLASSIAN_SITE_NAME') return origSiteName;
-					if (key === 'ATLASSIAN_USER_EMAIL') return origUserEmail;
-					if (key === 'ATLASSIAN_API_TOKEN') return origApiToken;
-					return config.get(key);
-				};
+				// Restore the original method; a wrapper calling config.get would recurse.
+				config.get = originalConfigGet;
 			}
 		});
 	});

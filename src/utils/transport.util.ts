@@ -43,7 +43,12 @@ async function resolveCloudId(bearer: string): Promise<string> {
 	}
 	const response = await fetch(
 		'https://api.atlassian.com/oauth/token/accessible-resources',
-		{ headers: { Authorization: `Bearer ${bearer}`, Accept: 'application/json' } },
+		{
+			headers: {
+				Authorization: `Bearer ${bearer}`,
+				Accept: 'application/json',
+			},
+		},
 	);
 	if (!response.ok) {
 		throw createAuthInvalidError(
@@ -51,7 +56,11 @@ async function resolveCloudId(bearer: string): Promise<string> {
 		);
 	}
 	const resources = (await response.json()) as Array<{ id: string }>;
-	if (!Array.isArray(resources) || resources.length === 0 || !resources[0]?.id) {
+	if (
+		!Array.isArray(resources) ||
+		resources.length === 0 ||
+		!resources[0]?.id
+	) {
 		throw createAuthInvalidError(
 			'OAuth token has no accessible Atlassian sites. Re-authorize the Jira connection.',
 		);
