@@ -83,16 +83,8 @@ describe('Jira attachment MCP tool', () => {
 	});
 
 	it('returns an MCP error when credentials are missing', async () => {
-		const originalEnv = {
-			ATLASSIAN_OAUTH_BEARER: process.env.ATLASSIAN_OAUTH_BEARER,
-			ATLASSIAN_SITE_NAME: process.env.ATLASSIAN_SITE_NAME,
-			ATLASSIAN_USER_EMAIL: process.env.ATLASSIAN_USER_EMAIL,
-			ATLASSIAN_API_TOKEN: process.env.ATLASSIAN_API_TOKEN,
-		};
+		const originalBearer = process.env.ATLASSIAN_OAUTH_BEARER;
 		delete process.env.ATLASSIAN_OAUTH_BEARER;
-		delete process.env.ATLASSIAN_SITE_NAME;
-		delete process.env.ATLASSIAN_USER_EMAIL;
-		delete process.env.ATLASSIAN_API_TOKEN;
 		const { client, close } = await connect();
 		try {
 			const result = await client.callTool({
@@ -106,17 +98,14 @@ describe('Jira attachment MCP tool', () => {
 			expect(result.isError).toBe(true);
 			expect(result.content).toEqual([
 				expect.objectContaining({
-					text: expect.stringContaining(
-						'Authentication credentials are missing',
-					),
+					text: expect.stringContaining('ATLASSIAN_OAUTH_BEARER'),
 				}),
 			]);
 		} finally {
 			await close();
-			for (const [key, value] of Object.entries(originalEnv)) {
-				if (value === undefined) delete process.env[key];
-				else process.env[key] = value;
-			}
+			if (originalBearer === undefined)
+				delete process.env.ATLASSIAN_OAUTH_BEARER;
+			else process.env.ATLASSIAN_OAUTH_BEARER = originalBearer;
 		}
 	});
 });

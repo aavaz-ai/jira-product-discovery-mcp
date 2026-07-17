@@ -8,9 +8,6 @@ const originalFetch = global.fetch;
 const originalEnv = {
 	ATLASSIAN_OAUTH_BEARER: process.env.ATLASSIAN_OAUTH_BEARER,
 	ATLASSIAN_CLOUD_ID: process.env.ATLASSIAN_CLOUD_ID,
-	ATLASSIAN_SITE_NAME: process.env.ATLASSIAN_SITE_NAME,
-	ATLASSIAN_USER_EMAIL: process.env.ATLASSIAN_USER_EMAIL,
-	ATLASSIAN_API_TOKEN: process.env.ATLASSIAN_API_TOKEN,
 };
 
 const site = {
@@ -98,9 +95,6 @@ describe('JPD Insight service', () => {
 	beforeEach(() => {
 		process.env.ATLASSIAN_OAUTH_BEARER = 'private-jira-bearer';
 		delete process.env.ATLASSIAN_CLOUD_ID;
-		delete process.env.ATLASSIAN_SITE_NAME;
-		delete process.env.ATLASSIAN_USER_EMAIL;
-		delete process.env.ATLASSIAN_API_TOKEN;
 		global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 	});
 
@@ -188,6 +182,10 @@ describe('JPD Insight service', () => {
 		expect(fetchMock().mock.calls[1][0]).toBe(
 			'https://api.atlassian.com/ex/jira/cloud-123/rest/api/3/issue/IDEA-7?fields=project',
 		);
+		expect(fetchMock().mock.calls[0][1]?.headers).toEqual({
+			Authorization: 'Bearer private-jira-bearer',
+			Accept: 'application/json',
+		});
 		expect(requestBody(2)).toEqual({
 			operationName: 'ListInsights',
 			query: LIST_JPD_INSIGHTS_DOCUMENT,
@@ -316,20 +314,13 @@ describe('JPD Insight service', () => {
 		});
 	});
 
-	it('requires bearer auth and rejects API-token mode', async () => {
+	it('requires bearer auth', async () => {
 		delete process.env.ATLASSIAN_OAUTH_BEARER;
 		await expect(listJpdInsights({ ideaKey: 'IDEA-7' })).rejects.toThrow(
 			'ATLASSIAN_OAUTH_BEARER',
 		);
 		await expect(createJpdInsight(createArgs)).rejects.toThrow(
 			'ATLASSIAN_OAUTH_BEARER',
-		);
-
-		process.env.ATLASSIAN_SITE_NAME = 'product';
-		process.env.ATLASSIAN_USER_EMAIL = 'user@example.com';
-		process.env.ATLASSIAN_API_TOKEN = 'api-token';
-		await expect(listJpdInsights({ ideaKey: 'IDEA-7' })).rejects.toThrow(
-			'API-token authentication is unsupported',
 		);
 	});
 
