@@ -105,7 +105,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.23.0",
-    "@toon-format/toon": "^2.0.1",
+    "@toon-format/toon": "^2.3.1",
     "commander": "^14.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
