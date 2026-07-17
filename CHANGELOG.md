@@ -1,3 +1,16 @@
+# Changelog
+
+## 0.2.0 - Unreleased
+
+- Add native Jira Product Discovery Insight listing and description-only creation.
+- Add typed Jira attachment uploads while retaining the five generic Jira REST tools.
+- Support Enterpret's broker-supplied Atlassian OAuth bearer mode.
+
+## Inherited upstream history
+
+The entries below predate this standalone package and are retained from the
+upstream Jira MCP project for implementation provenance.
+
 # [3.3.0](https://github.com/aashari/mcp-server-atlassian-jira/compare/v3.2.1...v3.3.0) (2025-12-03)
 
 
