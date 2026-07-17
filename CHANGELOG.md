@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 - Unreleased
+## 0.2.0 - 2026-07-18
 
 - Add native Jira Product Discovery Insight listing and description-only creation.
 - Add typed Jira attachment uploads while retaining the five generic Jira REST tools.
