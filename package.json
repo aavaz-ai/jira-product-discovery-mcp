@@ -1,7 +1,7 @@
 {
-  "name": "@enterpret/jira-mcp",
-  "version": "0.1.0",
-  "description": "Enterpret fork of @aashari/mcp-server-atlassian-jira adding an ATLASSIAN_OAUTH_BEARER mode (3LO bearer + cloudId discovery) so a Nango-supplied access token plugs straight into Jira Cloud REST. Used by the Orbit/wisdom-v2 jira_mcp bring_token connector.",
+  "name": "@enterpret/jira-product-discovery-mcp",
+  "version": "0.2.0",
+  "description": "MCP server for Jira Cloud REST APIs, native Jira Product Discovery Insights, and supporting attachments.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "commonjs",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/aavaz-ai/jira-mcp-server.git"
+    "url": "https://github.com/aavaz-ai/jira-product-discovery-mcp.git"
   },
   "bin": {
     "mcp-atlassian-jira": "./dist/index.js"
