@@ -36,7 +36,7 @@ function decodeContent(args: AddJiraAttachmentArgsType): Buffer {
 	const content = Buffer.from(args.content, args.encoding);
 	if (content.byteLength > MAX_ATTACHMENT_BYTES) {
 		throw createApiError(
-			'Attachment exceeds the Jira MCP upload limit of 10 MiB.',
+			'Attachment exceeds the Jira Product Discovery MCP upload limit of 10 MiB.',
 			400,
 		);
 	}

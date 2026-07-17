@@ -40,4 +40,4 @@ yarn-error.log*
 
 # Runtime data
 .env
-.env.* 
+.env.*

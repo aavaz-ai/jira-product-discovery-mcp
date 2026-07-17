@@ -9,16 +9,16 @@
  * Current application version
  * This should match the version in package.json
  */
-export const VERSION = '1.26.9';
+export const VERSION = '0.2.0';
 
 /**
  * Package name with scope
  * Used for initialization and identification
  */
-export const PACKAGE_NAME = '@aashari/mcp-server-atlassian-jira';
+export const PACKAGE_NAME = '@enterpret/jira-product-discovery-mcp';
 
 /**
  * CLI command name
  * Used for binary name and CLI help text
  */
-export const CLI_NAME = 'mcp-atlassian-jira';
+export const CLI_NAME = 'jira-product-discovery-mcp';

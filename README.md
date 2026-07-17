@@ -1,8 +1,8 @@
-# Connect AI to Your Jira Projects
+# Jira Product Discovery MCP
 
-Transform how you manage and track your work by connecting Claude, Cursor AI, and other AI assistants directly to your Jira projects, issues, and workflows. Get instant project insights, streamline issue management, and enhance your team collaboration.
+Connect MCP clients to Jira Cloud REST APIs and native Jira Product Discovery Insights. The server keeps the full generic Jira API surface while adding typed tools for JPD Insights and attachments.
 
-[![NPM Version](https://img.shields.io/npm/v/@aashari/mcp-server-atlassian-jira)](https://www.npmjs.com/package/@aashari/mcp-server-atlassian-jira)
+[![NPM Version](https://img.shields.io/npm/v/@enterpret/jira-product-discovery-mcp)](https://www.npmjs.com/package/@enterpret/jira-product-discovery-mcp)
 
 ## What You Can Do
 
@@ -43,13 +43,13 @@ export ATLASSIAN_USER_EMAIL="your.email@company.com"
 export ATLASSIAN_API_TOKEN="your_api_token"
 
 # List your Jira projects
-npx -y @aashari/mcp-server-atlassian-jira get --path "/rest/api/3/project/search"
+npx -y @enterpret/jira-product-discovery-mcp get --path "/rest/api/3/project/search"
 
 # Get details about a specific project
-npx -y @aashari/mcp-server-atlassian-jira get --path "/rest/api/3/project/DEV"
+npx -y @enterpret/jira-product-discovery-mcp get --path "/rest/api/3/project/DEV"
 
 # Get an issue with JMESPath filtering
-npx -y @aashari/mcp-server-atlassian-jira get --path "/rest/api/3/issue/PROJ-123" --jq "{key: key, summary: fields.summary, status: fields.status.name}"
+npx -y @enterpret/jira-product-discovery-mcp get --path "/rest/api/3/issue/PROJ-123" --jq "{key: key, summary: fields.summary, status: fields.status.name}"
 ```
 
 ## Connect to AI Assistants
@@ -63,7 +63,7 @@ Add this to your Claude configuration file (`~/.claude/claude_desktop_config.jso
   "mcpServers": {
     "jira": {
       "command": "npx",
-      "args": ["-y", "@aashari/mcp-server-atlassian-jira"],
+      "args": ["-y", "@enterpret/jira-product-discovery-mcp"],
       "env": {
         "ATLASSIAN_SITE_NAME": "your-company",
         "ATLASSIAN_USER_EMAIL": "your.email@company.com",
@@ -81,7 +81,7 @@ Restart Claude Desktop, and you'll see the jira server in the status bar.
 Most AI assistants support MCP. Install the server globally:
 
 ```bash
-npm install -g @aashari/mcp-server-atlassian-jira
+npm install -g @enterpret/jira-product-discovery-mcp
 ```
 
 Then configure your AI assistant to use the MCP server with STDIO transport.
@@ -102,7 +102,7 @@ Create `~/.mcp/configs.json` for system-wide configuration:
 }
 ```
 
-**Alternative config keys:** The system also accepts `"atlassian-jira"`, `"@aashari/mcp-server-atlassian-jira"`, or `"mcp-server-atlassian-jira"` instead of `"jira"`.
+**Alternative config keys:** The system also accepts `"atlassian-jira"`, `"@enterpret/jira-product-discovery-mcp"`, or `"jira-product-discovery-mcp"` instead of `"jira"`.
 
 ## Available Tools
 
@@ -175,19 +175,19 @@ All tools support optional JMESPath (`jq`) filtering to extract specific data:
 
 ```bash
 # Get just project names and keys
-npx -y @aashari/mcp-server-atlassian-jira get \
+npx -y @enterpret/jira-product-discovery-mcp get \
   --path "/rest/api/3/project/search" \
   --jq "values[].{key: key, name: name}"
 
 # Get issue key and summary
-npx -y @aashari/mcp-server-atlassian-jira get \
+npx -y @enterpret/jira-product-discovery-mcp get \
   --path "/rest/api/3/issue/PROJ-123" \
   --jq "{key: key, summary: fields.summary, status: fields.status.name}"
 ```
 
 ### Response Truncation and Raw Logs
 
-For large API responses (>40k characters ≈ 10k tokens), responses are automatically truncated with guidance. The complete raw response is saved to `/tmp/mcp/mcp-server-atlassian-jira/<timestamp>-<random>.txt` for reference.
+For large API responses (>40k characters ≈ 10k tokens), responses are automatically truncated with guidance. The complete raw response is saved to `/tmp/mcp/jira-product-discovery-mcp/<timestamp>-<random>.txt` for reference.
 
 **When truncated, you'll see:**
 - A truncation notice with the raw file path
@@ -230,41 +230,41 @@ The CLI mirrors the MCP tools for direct terminal access:
 
 ```bash
 # GET request (returns TOON format by default)
-npx -y @aashari/mcp-server-atlassian-jira get --path "/rest/api/3/project/search"
+npx -y @enterpret/jira-product-discovery-mcp get --path "/rest/api/3/project/search"
 
 # GET with query parameters and JSON output
-npx -y @aashari/mcp-server-atlassian-jira get \
+npx -y @enterpret/jira-product-discovery-mcp get \
   --path "/rest/api/3/search/jql" \
   --query-params '{"jql": "project=DEV AND status=\"In Progress\"", "maxResults": "10"}' \
   --output-format json
 
 # GET with JMESPath filtering to extract specific fields
-npx -y @aashari/mcp-server-atlassian-jira get \
+npx -y @enterpret/jira-product-discovery-mcp get \
   --path "/rest/api/3/issue/PROJ-123" \
   --jq "{key: key, summary: fields.summary, status: fields.status.name}"
 
 # POST request (create an issue)
-npx -y @aashari/mcp-server-atlassian-jira post \
+npx -y @enterpret/jira-product-discovery-mcp post \
   --path "/rest/api/3/issue" \
   --body '{"fields": {"project": {"key": "DEV"}, "summary": "New issue title", "issuetype": {"name": "Task"}}}'
 
 # POST request (add a comment)
-npx -y @aashari/mcp-server-atlassian-jira post \
+npx -y @enterpret/jira-product-discovery-mcp post \
   --path "/rest/api/3/issue/PROJ-123/comment" \
   --body '{"body": {"type": "doc", "version": 1, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "My comment"}]}]}}'
 
 # PUT request (update issue - full replacement)
-npx -y @aashari/mcp-server-atlassian-jira put \
+npx -y @enterpret/jira-product-discovery-mcp put \
   --path "/rest/api/3/issue/PROJ-123" \
   --body '{"fields": {"summary": "Updated title"}}'
 
 # PATCH request (partial update)
-npx -y @aashari/mcp-server-atlassian-jira patch \
+npx -y @enterpret/jira-product-discovery-mcp patch \
   --path "/rest/api/3/issue/PROJ-123" \
   --body '{"fields": {"summary": "Updated title"}}'
 
 # DELETE request
-npx -y @aashari/mcp-server-atlassian-jira delete \
+npx -y @enterpret/jira-product-discovery-mcp delete \
   --path "/rest/api/3/issue/PROJ-123/comment/12345"
 ```
 
@@ -287,7 +287,7 @@ npx -y @aashari/mcp-server-atlassian-jira delete \
 
 3. **Test your credentials**:
    ```bash
-   npx -y @aashari/mcp-server-atlassian-jira get --path "/rest/api/3/myself"
+   npx -y @enterpret/jira-product-discovery-mcp get --path "/rest/api/3/myself"
    ```
 
 ### "Resource not found" or "404"
@@ -321,7 +321,7 @@ npx -y @aashari/mcp-server-atlassian-jira delete \
 
 If you're still having issues:
 1. Run a simple test command to verify everything works
-2. Check the [GitHub Issues](https://github.com/aashari/mcp-server-atlassian-jira/issues) for similar problems
+2. Check the [GitHub Issues](https://github.com/aavaz-ai/jira-product-discovery-mcp/issues) for similar problems
 3. Create a new issue with your error message and setup details
 
 ## Frequently Asked Questions
@@ -362,7 +362,7 @@ Yes! This tool:
 
 Yes! Use JQL queries for cross-project searches. For example:
 ```bash
-npx -y @aashari/mcp-server-atlassian-jira get \
+npx -y @enterpret/jira-product-discovery-mcp get \
   --path "/rest/api/3/search/jql" \
   --query-params '{"jql": "assignee=currentUser() AND status=\"In Progress\""}'
 ```
@@ -374,7 +374,7 @@ npx -y @aashari/mcp-server-atlassian-jira get \
 **Version 3.2.1** (December 2025):
 - Added TOON output format for 30-60% token reduction
 - Implemented automatic response truncation for large payloads (>40k chars)
-- Raw API responses saved to `/tmp/mcp/mcp-server-atlassian-jira/` for reference
+- Raw API responses saved to `/tmp/mcp/jira-product-discovery-mcp/` for reference
 - Updated to MCP SDK v1.23.0 with modern `registerTool` API
 - Fixed deprecated `/rest/api/3/search` endpoint (now use `/rest/api/3/search/jql`)
 - Updated all dependencies to latest versions (Zod v4.1.13, Commander v14.0.2)
@@ -404,7 +404,7 @@ Enable debug logging by setting the `DEBUG` environment variable:
   "mcpServers": {
     "jira": {
       "command": "npx",
-      "args": ["-y", "@aashari/mcp-server-atlassian-jira"],
+      "args": ["-y", "@enterpret/jira-product-discovery-mcp"],
       "env": {
         "DEBUG": "true",
         "ATLASSIAN_SITE_NAME": "your-company",
@@ -416,9 +416,9 @@ Enable debug logging by setting the `DEBUG` environment variable:
 }
 ```
 
-Debug logs are written to `~/.mcp/data/mcp-server-atlassian-jira.<session-id>.log`
+Debug logs are written to `~/.mcp/data/jira-product-discovery-mcp.<session-id>.log`
 
-**Check raw API responses:** When responses are truncated, the full raw response is saved to `/tmp/mcp/mcp-server-atlassian-jira/<timestamp>-<random>.txt` with request/response details.
+**Check raw API responses:** When responses are truncated, the full raw response is saved to `/tmp/mcp/jira-product-discovery-mcp/<timestamp>-<random>.txt` with request/response details.
 
 ## Migration from v2.x
 
@@ -455,8 +455,8 @@ jira_get, jira_post, jira_put, jira_patch, jira_delete
 Need help? Here's how to get assistance:
 
 1. **Check the troubleshooting section above** - most common issues are covered there
-2. **Visit our GitHub repository** for documentation and examples: [github.com/aashari/mcp-server-atlassian-jira](https://github.com/aashari/mcp-server-atlassian-jira)
-3. **Report issues** at [GitHub Issues](https://github.com/aashari/mcp-server-atlassian-jira/issues)
+2. **Visit our GitHub repository** for documentation and examples: [github.com/aavaz-ai/jira-product-discovery-mcp](https://github.com/aavaz-ai/jira-product-discovery-mcp)
+3. **Report issues** at [GitHub Issues](https://github.com/aavaz-ai/jira-product-discovery-mcp/issues)
 4. **Start a discussion** for feature requests or general questions
 
 ---
