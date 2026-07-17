@@ -9,14 +9,13 @@ import {
 	ListJpdInsightsResult,
 	type ListJpdInsightsResultType,
 } from '../tools/jpd.insights.types.js';
-import { createApiError } from '../utils/error.util.js';
+import { config } from '../utils/config.util.js';
 import {
-	fetchAtlassianJson,
-	jiraApiUrl,
-	requireOAuthBearer,
-	resolveAtlassianSite,
-	type AtlassianSite,
-} from './atlassian.oauth.service.js';
+	createApiError,
+	createAuthInvalidError,
+	createAuthMissingError,
+} from '../utils/error.util.js';
+import { getAtlassianCredentials } from '../utils/transport.util.js';
 import {
 	createPolarisInsight,
 	listPolarisInsights,
@@ -25,6 +24,19 @@ import {
 	type JsonValue,
 	type PolarisInsight,
 } from './vendor.polaris.service.js';
+
+const ACCESSIBLE_RESOURCES_URL =
+	'https://api.atlassian.com/oauth/token/accessible-resources';
+
+const AccessibleResourcesSchema = z.array(
+	z.object({
+		id: z.string().min(1),
+		name: z.string().min(1),
+		url: z.url(),
+	}),
+);
+
+type AccessibleResource = z.infer<typeof AccessibleResourcesSchema>[number];
 
 const JiraIdeaSchema = z.object({
 	id: z.string().min(1),
@@ -44,8 +56,57 @@ interface ResolvedIdea {
 
 interface JpdContext {
 	bearer: string;
-	site: AtlassianSite;
+	site: AccessibleResource;
 	idea: ResolvedIdea;
+}
+
+function requireJpdBearer(): string {
+	const credentials = getAtlassianCredentials();
+	if (!credentials?.oauthBearer) {
+		throw createAuthMissingError(
+			'Jira Product Discovery Insights require ATLASSIAN_OAUTH_BEARER from the existing Jira 3LO connection; API-token authentication is unsupported.',
+		);
+	}
+	return credentials.oauthBearer;
+}
+
+async function fetchJpdJson(
+	url: string,
+	bearer: string,
+	operation: string,
+): Promise<unknown> {
+	let response: Response;
+	try {
+		response = await fetch(url, {
+			headers: {
+				Authorization: `Bearer ${bearer}`,
+				Accept: 'application/json',
+			},
+		});
+	} catch {
+		throw createApiError(`Network error while ${operation}.`, 502);
+	}
+
+	if (!response.ok) {
+		if (response.status === 401) {
+			throw createAuthInvalidError(
+				`Atlassian rejected the Jira OAuth bearer while ${operation}.`,
+			);
+		}
+		throw createApiError(
+			`Atlassian request failed while ${operation} (HTTP ${response.status}).`,
+			response.status,
+		);
+	}
+
+	try {
+		return await response.json();
+	} catch {
+		throw createApiError(
+			`Atlassian returned malformed JSON while ${operation}.`,
+			502,
+		);
+	}
 }
 
 async function resolveIdea(
@@ -54,8 +115,8 @@ async function resolveIdea(
 	ideaKey: string,
 ): Promise<ResolvedIdea> {
 	const path = `/rest/api/3/issue/${encodeURIComponent(ideaKey)}?fields=project`;
-	const payload = await fetchAtlassianJson(
-		jiraApiUrl(cloudId, path),
+	const payload = await fetchJpdJson(
+		`https://api.atlassian.com/ex/jira/${encodeURIComponent(cloudId)}${path}`,
 		bearer,
 		'resolving the Jira idea',
 	);
@@ -75,11 +136,54 @@ async function resolveIdea(
 	};
 }
 
+async function resolveJpdSite(bearer: string): Promise<AccessibleResource> {
+	const payload = await fetchJpdJson(
+		ACCESSIBLE_RESOURCES_URL,
+		bearer,
+		'resolving accessible Atlassian sites',
+	);
+
+	const parsed = AccessibleResourcesSchema.safeParse(payload);
+	if (!parsed.success) {
+		throw createApiError(
+			'Atlassian accessible-resources response did not match the expected schema.',
+			502,
+		);
+	}
+
+	const configuredCloudId = config.get('ATLASSIAN_CLOUD_ID')?.trim();
+	if (configuredCloudId) {
+		const configuredSite = parsed.data.find(
+			(site) => site.id === configuredCloudId,
+		);
+		if (!configuredSite) {
+			throw createAuthInvalidError(
+				'ATLASSIAN_CLOUD_ID does not match a site accessible to the OAuth token.',
+			);
+		}
+		return configuredSite;
+	}
+
+	if (parsed.data.length === 0) {
+		throw createAuthInvalidError(
+			'OAuth token has no accessible Atlassian sites. Re-authorize the Jira connection.',
+		);
+	}
+	if (parsed.data.length > 1) {
+		throw createApiError(
+			'Multiple Atlassian sites are accessible. Set ATLASSIAN_CLOUD_ID.',
+			400,
+		);
+	}
+
+	return parsed.data[0];
+}
+
 async function resolveJpdContext(
 	bearer: string,
 	ideaKey: string,
 ): Promise<JpdContext> {
-	const site = await resolveAtlassianSite(bearer);
+	const site = await resolveJpdSite(bearer);
 	const idea = await resolveIdea(bearer, site.id, ideaKey);
 	return { bearer, site, idea };
 }
@@ -173,7 +277,7 @@ function normalizeInsights(insights: PolarisInsight[]) {
 	}));
 }
 
-function siteIdentity(site: AtlassianSite) {
+function siteIdentity(site: AccessibleResource) {
 	return { cloudId: site.id, name: site.name, url: site.url };
 }
 
@@ -229,7 +333,7 @@ export async function listJpdInsights(
 	input: ListJpdInsightsArgsType,
 ): Promise<ListJpdInsightsResultType> {
 	const args = ListJpdInsightsArgs.parse(input);
-	const context = await resolveJpdContext(requireOAuthBearer(), args.ideaKey);
+	const context = await resolveJpdContext(requireJpdBearer(), args.ideaKey);
 	const insights = await listForContext(context);
 
 	return ListJpdInsightsResult.parse({
@@ -243,7 +347,7 @@ export async function createJpdInsight(
 	input: CreateJpdInsightArgsType,
 ): Promise<CreateJpdInsightResultType> {
 	const args = CreateJpdInsightArgs.parse(input);
-	const bearer = requireOAuthBearer();
+	const bearer = requireJpdBearer();
 	const context = await resolveJpdContext(bearer, args.ideaKey);
 	const insightId = await createPolarisInsight(context.bearer, {
 		input: createInput(args, context),

@@ -4,13 +4,12 @@ import {
 	type AddJiraAttachmentArgsType,
 	type AddJiraAttachmentResultType,
 } from '../tools/jira.attachments.types.js';
-import { createApiError, createUnexpectedError } from '../utils/error.util.js';
 import {
-	fetchAtlassianJson,
-	jiraApiUrl,
-	requireOAuthBearer,
-	resolveAtlassianSite,
-} from './atlassian.oauth.service.js';
+	fetchAtlassian,
+	type AtlassianCredentials,
+} from '../utils/transport.util.js';
+import { createApiError, createUnexpectedError } from '../utils/error.util.js';
+import { validateCredentials } from './vendor.atlassian.api.service.js';
 
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 const BASE64 =
@@ -45,11 +44,10 @@ function decodeContent(args: AddJiraAttachmentArgsType): Buffer {
 }
 
 async function upload(
+	credentials: AtlassianCredentials,
 	args: AddJiraAttachmentArgsType,
 ): Promise<AddJiraAttachmentResultType> {
 	const content = decodeContent(args);
-	const bearer = requireOAuthBearer();
-	const site = await resolveAtlassianSite(bearer);
 	const form = new FormData();
 	form.append(
 		'file',
@@ -57,21 +55,19 @@ async function upload(
 		args.filename,
 	);
 
-	const response = await fetchAtlassianJson(
-		jiraApiUrl(
-			site.id,
-			`/rest/api/3/issue/${encodeURIComponent(args.issueKey)}/attachments`,
-		),
-		bearer,
-		'uploading the Jira attachment',
+	const response = await fetchAtlassian<unknown>(
+		credentials,
+		`/rest/api/3/issue/${encodeURIComponent(args.issueKey)}/attachments`,
 		{
 			method: 'POST',
 			headers: { 'X-Atlassian-Token': 'no-check' },
 			body: form,
+			bodyFormat: 'raw',
+			sensitive: true,
 		},
 	);
 
-	const parsed = JiraAttachmentResponseSchema.safeParse(response);
+	const parsed = JiraAttachmentResponseSchema.safeParse(response.data);
 	if (!parsed.success) {
 		throw createUnexpectedError(
 			'Jira returned an unsupported attachment response.',
@@ -98,5 +94,5 @@ export async function addJiraAttachment(
 	input: unknown,
 ): Promise<AddJiraAttachmentResultType> {
 	const args = AddJiraAttachmentArgs.parse(input);
-	return upload(args);
+	return upload(validateCredentials(), args);
 }
