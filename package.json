@@ -25,6 +25,7 @@
     "test:cli": "jest src/cli/.*\\.cli\\.test\\.ts --runInBand --testTimeout=60000",
     "lint": "eslint src --ext .ts --config eslint.config.mjs",
     "format": "prettier --write 'src/**/*.ts' 'scripts/**/*.js'",
+    "format:check": "prettier --check 'src/**/*.ts' 'scripts/**/*.js'",
     "publish:npm": "npm publish",
     "update:check": "npx npm-check-updates",
     "update:deps": "npx npm-check-updates -u && npm install --legacy-peer-deps",
