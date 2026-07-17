@@ -19,7 +19,7 @@ import jpdInsightsTools from './tools/jpd.insights.tool.js';
 const indexLogger = Logger.forContext('index.ts');
 
 // Log initialization at debug level
-indexLogger.debug('Jira MCP server module loaded');
+indexLogger.debug('Jira Product Discovery MCP server module loaded');
 
 let serverInstance: McpServer | null = null;
 let transportInstance:
@@ -56,7 +56,9 @@ export async function startServer(
 	);
 	serverLogger.debug(`Config DEBUG value: ${config.get('DEBUG')}`);
 
-	serverLogger.info(`Initializing Jira MCP server v${VERSION}`);
+	serverLogger.info(
+		`Initializing Jira Product Discovery MCP server v${VERSION}`,
+	);
 	serverInstance = new McpServer({
 		name: PACKAGE_NAME,
 		version: VERSION,
@@ -125,7 +127,9 @@ export async function startServer(
 
 		// Health check endpoint
 		app.get('/', (_req: Request, res: Response) => {
-			res.send(`Jira MCP Server v${VERSION} is running`);
+			res.send(
+				`Jira Product Discovery MCP Server v${VERSION} is running`,
+			);
 		});
 
 		// Start HTTP server

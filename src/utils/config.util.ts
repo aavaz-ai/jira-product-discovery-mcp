@@ -114,9 +114,9 @@ class ConfigLoader {
 			// Determine the potential keys for the current package
 			const shortKey = 'jira'; // Project-specific short key
 			const atlassianProductKey = 'atlassian-jira'; // New supported key
-			const fullPackageName = this.packageName; // e.g., '@aashari/mcp-server-atlassian-jira'
+			const fullPackageName = this.packageName; // e.g., '@enterpret/jira-product-discovery-mcp'
 			const unscopedPackageName =
-				fullPackageName.split('/')[1] || fullPackageName; // e.g., 'mcp-server-atlassian-jira'
+				fullPackageName.split('/')[1] || fullPackageName; // e.g., 'jira-product-discovery-mcp'
 
 			// Define the prioritized order of keys to check
 			const potentialKeys = [
@@ -199,4 +199,4 @@ class ConfigLoader {
 }
 
 // Create and export a singleton instance with the package name from package.json
-export const config = new ConfigLoader('@aashari/mcp-server-atlassian-jira');
+export const config = new ConfigLoader('@enterpret/jira-product-discovery-mcp');
