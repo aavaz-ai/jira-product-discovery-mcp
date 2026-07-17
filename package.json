@@ -6,6 +6,7 @@
   "types": "dist/index.d.ts",
   "type": "commonjs",
   "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
     "access": "public"
   },
   "repository": {
@@ -13,12 +14,17 @@
     "url": "https://github.com/aavaz-ai/jira-product-discovery-mcp.git"
   },
   "bin": {
-    "mcp-atlassian-jira": "./dist/index.js"
+    "jira-product-discovery-mcp": "./dist/index.js"
   },
+  "files": [
+    "dist/",
+    "docs/JPD-SNIPPETS.md",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "npm run clean && tsc",
     "prepare": "npm run build && node scripts/ensure-executable.js",
-    "postinstall": "node scripts/ensure-executable.js",
     "clean": "rm -rf dist coverage",
     "test": "jest",
     "test:coverage": "jest --coverage",
@@ -68,11 +74,6 @@
   "license": "ISC",
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/exec": "^7.1.0",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^12.0.2",
-    "@semantic-release/npm": "^13.1.2",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
     "@types/jest": "^30.0.0",
@@ -90,29 +91,21 @@
     "nodemon": "^3.1.11",
     "npm-check-updates": "^19.1.2",
     "prettier": "^3.7.3",
-    "semantic-release": "^25.0.2",
     "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.48.0"
   },
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org/",
-    "access": "public"
-  },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.23.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@toon-format/toon": "^2.0.1",
     "commander": "^14.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "express": "^5.1.0",
+    "express": "^5.2.1",
     "jmespath": "^0.16.0",
     "turndown": "^7.2.2",
     "zod": "^4.1.13"
-  },
-  "directories": {
-    "example": "examples"
   },
   "jest": {
     "preset": "ts-jest",
